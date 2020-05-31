@@ -78,10 +78,10 @@ Module.register("MMM-nodejs-pool",{
 
 			var poolTemp = document.createElement("span");
 
-			if (poolStatus === "1") {
+			if (poolStatus == 1) {
 				poolTemp.className = "bright poolTemp";
 				poolString = "Pool is On: " + this.tempData.temperature.poolTemp + "&deg;";
-			} else if (spaStatus === "1") {
+			} else if (spaStatus == 1) {
 				poolTemp.className = "bright poolTemp";
 				spaString = "Spa is On" + this.tempData.temperature.spaTemp + "&deg;";
 			} else {
@@ -92,7 +92,7 @@ Module.register("MMM-nodejs-pool",{
 			poolTemp.innerHTML = poolString;
 			large.appendChild(poolTemp);
 
-			if (poolStatus === "1" || spaStatus === "1") {	
+			if (poolStatus == 1 || spaStatus == 1) {	
 				if (this.pumpData) {
 					// Add in Pump Speed
 					var pumpWatts = this.pumpData.pump['1'].rpm;
@@ -105,10 +105,11 @@ Module.register("MMM-nodejs-pool",{
 					large.appendChild(pumpInfo);
 				}
 
+/*
 				if (this.tempData) {
 					// Show Pool heater information
 					var heatInfo = document.createElement("div");
-					if (this.tempData.temperature.heaterActive === "0") {
+					if (this.tempData.temperature.heaterActive == 0) {
 						heatInfo.className = "dimmed small heatInfo";
 						heatInfo.innerHTML = "Heat is off";
 					} else {
@@ -117,6 +118,7 @@ Module.register("MMM-nodejs-pool",{
 					}
 					large.appendChild(heatInfo);
 				}
+*/
 			}
 
 			if (this.tempData) {
