@@ -20,8 +20,6 @@ Module.register("MMM-nodejs-pool",{
 	start: function() {
 		this.loaded = false;
 		this.poolData = null;
-		this.tempData = null;
-		this.pumpData = null;
 
 		this.sendSocketNotification("CONFIG", this.config);
 
@@ -42,13 +40,8 @@ Module.register("MMM-nodejs-pool",{
 			this.poolData = JSON.parse(payload);
 			this.loaded = true;
 			this.updateDom();
-		} else if (notification === "PUMP_DATA") {
-			this.pumpData = JSON.parse(payload);
-			this.loaded = true;
-			this.updateDom();
-		} else if (notification === "TEMP_DATA") {
-			this.tempData = JSON.parse(payload);
-			this.loaded = true;
+		} else if (notification === "POOL_ERROR") {
+			this.loaded = false;
 			this.updateDom();
 		}
 		this.scheduleUpdate()
@@ -80,10 +73,11 @@ Module.register("MMM-nodejs-pool",{
 
 			if (poolStatus == 1) {
 				poolTemp.className = "bright poolTemp";
-				poolString = "Pool is On: " + this.tempData.temperature.poolTemp + "&deg;";
+				poolString = "Pool is On: " + this.poolData.temperature.poolTemp + "&deg;";
+					
 			} else if (spaStatus == 1) {
 				poolTemp.className = "bright poolTemp";
-				spaString = "Spa is On" + this.tempData.temperature.spaTemp + "&deg;";
+				spaString = "Spa is On" + this.poolData.temperature.spaTemp + "&deg;";
 			} else {
 				poolTemp.className = "dimmed poolTemp";
 				poolString = "Pool is Off";
@@ -93,17 +87,15 @@ Module.register("MMM-nodejs-pool",{
 			large.appendChild(poolTemp);
 
 			if (poolStatus == 1 || spaStatus == 1) {	
-				if (this.pumpData) {
-					// Add in Pump Speed
-					var pumpWatts = this.pumpData.pump['1'].rpm;
-					var pumpSpeed = this.pumpData.pump['1'].watts;
+				// Add in Pump Speed
+				var pumpWatts = this.poolData.pump['1'].rpm;
+				var pumpSpeed = this.poolData.pump['1'].watts;
 	
-					var pumpInfo= document.createElement("div");
-					pumpInfo.className = "bright small pumpInfo";
-					pumpInfo.innerHTML = "Pump: " + pumpWatts + " Watts, " + pumpSpeed + " RPM";
+				var pumpInfo= document.createElement("div");
+				pumpInfo.className = "bright small pumpInfo";
+				pumpInfo.innerHTML = "Pump: " + pumpWatts + " Watts, " + pumpSpeed + " RPM";
 					
-					large.appendChild(pumpInfo);
-				}
+				large.appendChild(pumpInfo);
 
 /*
 				if (this.tempData) {
@@ -121,20 +113,18 @@ Module.register("MMM-nodejs-pool",{
 */
 			}
 
-			if (this.tempData) {
-				var airsolTemp = document.createElement("div");
-				airsolTemp.className = "light medium airsolTemp";
-				large.appendChild(airsolTemp);
+			var airsolTemp = document.createElement("div");
+			airsolTemp.className = "light medium airsolTemp";
+			large.appendChild(airsolTemp);
 
-				var airTemp = document.createElement("span");
-				airTemp.innerHTML = "Air: " + this.tempData.temperature.airTemp + "&deg; ";
-				airsolTemp.appendChild(airTemp);
+			var airTemp = document.createElement("span");
+			airTemp.innerHTML = "Air: " + this.poolData.temperature.airTemp + "&deg; ";
+			airsolTemp.appendChild(airTemp);
 
-				var solTemp = document.createElement("span");
-				solTemp.className = "solTemp";
-				solTemp.innerHTML = "Solar: " + this.tempData.temperature.solarTemp + "&deg;";
-				airsolTemp.appendChild(solTemp);
-			}
+			var solTemp = document.createElement("span");
+			solTemp.className = "solTemp";
+			solTemp.innerHTML = "Solar: " + this.poolData.temperature.solarTemp + "&deg;";
+			airsolTemp.appendChild(solTemp);
 		}
 
 		wrapper.appendChild(large);

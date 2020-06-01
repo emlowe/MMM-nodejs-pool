@@ -14,8 +14,8 @@ module.exports = NodeHelper.create({
         console.log("Starting module: " + this.name);
     },
 
-    getPoolData: function() {
-        var url = "http://" + this.config.hostname + "/circuit";
+    getAllData: function() {
+        var url = "http://" + this.config.hostname + "/all";
         request({
             url: url,
             method: 'GET',
@@ -26,46 +26,15 @@ module.exports = NodeHelper.create({
             if (!error && response.statusCode == 200) {
 				var self=this;
 				self.sendSocketNotification("POOL_DATA", body) ;
+			} else {
+				var self=this;
+				self.sendSocketNotification("POOL_ERROR", response) ;
 			}
         });
     },
 
-	getTempData: function() {
-        var url = "http://" + this.config.hostname + "/temperature";
-        request({
-            url: url,
-            method: 'GET',
-            headers: {
-                'User-Agent': 'MagicMirror/1.0'
-            }
-        }, (error, response, body) => {
-            if (!error && response.statusCode == 200) {
-				var self=this;
-				self.sendSocketNotification("TEMP_DATA", body);
-			}
-        });
-	},
-    
-	getPumpData: function() {
-        var url = "http://" + this.config.hostname + "/pump";
-        request({
-            url: url,
-            method: 'GET',
-            headers: {
-                'User-Agent': 'MagicMirror/1.0'
-            }
-        }, (error, response, body) => {
-            if (!error && response.statusCode == 200) {
-				var self=this;
-				self.sendSocketNotification("PUMP_DATA", body);
-			}
-        });
-	},
-    
 	getData: function() {
-		this.getPoolData();
-		this.getPumpData();
-		this.getTempData();
+		this.getAllData();
 	},
     
     socketNotificationReceived: function(notification, payload) {
