@@ -65,19 +65,19 @@ Module.register("MMM-nodejs-pool",{
 		large.className = "medium light";
 
 		if (this.poolData) {
-			poolStatus = this.poolData.circuit['6'].status;
-			spaStatus = this.poolData.circuit['1'].status;
+			poolStatus = this.poolData.circuits[5].isOn;
+			spaStatus = this.poolData.circuits[0].isOn;
 			var poolString = "";
 
 			var poolTemp = document.createElement("span");
 
 			if (poolStatus == 1) {
 				poolTemp.className = "bright poolTemp";
-				poolString = "Pool is On: " + this.poolData.temperature.poolTemp + "&deg;";
+				poolString = "Pool is On: " + this.poolData.temps.bodies[0].temp + "&deg;";
 					
 			} else if (spaStatus == 1) {
 				poolTemp.className = "bright poolTemp";
-				spaString = "Spa is On" + this.poolData.temperature.spaTemp + "&deg;";
+				spaString = "Spa is On: " + this.poolData.temps.bodies[1].temp + "&deg;";
 			} else {
 				poolTemp.className = "dimmed poolTemp";
 				poolString = "Pool is Off";
@@ -88,8 +88,8 @@ Module.register("MMM-nodejs-pool",{
 
 			if (poolStatus == 1 || spaStatus == 1) {	
 				// Add in Pump Speed
-				var pumpWatts = this.poolData.pump['1'].rpm;
-				var pumpSpeed = this.poolData.pump['1'].watts;
+				var pumpWatts = this.poolData.pumps[0].rpm;
+				var pumpSpeed = this.poolData.pumps[0].watts;
 	
 				var pumpInfo= document.createElement("div");
 				pumpInfo.className = "bright small pumpInfo";
@@ -118,13 +118,13 @@ Module.register("MMM-nodejs-pool",{
 			large.appendChild(airsolTemp);
 
 			var airTemp = document.createElement("span");
-			airTemp.innerHTML = "Air: " + this.poolData.temperature.airTemp + "&deg; ";
+			airTemp.innerHTML = "Air: " + this.poolData.temps.air + "&deg; ";
 			airsolTemp.appendChild(airTemp);
 
-			var solTemp = document.createElement("span");
-			solTemp.className = "solTemp";
-			solTemp.innerHTML = "Solar: " + this.poolData.temperature.solarTemp + "&deg;";
-			airsolTemp.appendChild(solTemp);
+//			var solTemp = document.createElement("span");
+//			solTemp.className = "solTemp";
+//			solTemp.innerHTML = "Solar: " + this.poolData.temperature.solarTemp + "&deg;";
+//			airsolTemp.appendChild(solTemp);
 		}
 
 		wrapper.appendChild(large);

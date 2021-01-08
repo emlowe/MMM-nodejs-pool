@@ -15,7 +15,7 @@ module.exports = NodeHelper.create({
     },
 
     getAllData: function() {
-        var url = "http://" + this.config.hostname + "/all";
+        var url = "http://" + this.config.hostname + "/state/all";
         request({
             url: url,
             method: 'GET',
