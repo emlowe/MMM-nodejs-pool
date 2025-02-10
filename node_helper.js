@@ -6,36 +6,36 @@
  * Apache License
  */
 const NodeHelper = require('node_helper');
-const request = require('request');
+const Log = require("logger");
+const http = require('http');
 
 module.exports = NodeHelper.create({
         
     start: function() {
-        console.log("Starting module: " + this.name);
+                Log.log(`Starting node helper for: ${this.name}`);
     },
 
     getAllData: function() {
         var url = "http://" + this.config.hostname + "/state/all";
-        request({
-            url: url,
-            method: 'GET',
-            headers: {
-                'User-Agent': 'MagicMirror/1.0'
-            }
-        }, (error, response, body) => {
-            if (!error && response.statusCode == 200) {
-				var self=this;
-				self.sendSocketNotification("POOL_DATA", body) ;
-			} else {
-				var self=this;
-				self.sendSocketNotification("POOL_ERROR", response) ;
-			}
-        });
+
+                http.get(url, (res) => {
+                  let data = '';
+                  res.on('data', (chunk) => {
+                    data += chunk;
+                  });
+                  res.on('end', () => {
+                        var self=this;
+                        self.sendSocketNotification("POOL_DATA", data) ;
+                  });
+                
+                }).on('error', (err) => {
+                  Log.error(`Got error: ${err.message}`);
+                });
     },
 
-	getData: function() {
-		this.getAllData();
-	},
+        getData: function() {
+                this.getAllData();
+        },
     
     socketNotificationReceived: function(notification, payload) {
         if (notification === "CONFIG") {

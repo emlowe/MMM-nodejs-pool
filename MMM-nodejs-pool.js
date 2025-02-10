@@ -31,7 +31,7 @@ Module.register("MMM-nodejs-pool",{
     },
 
 	getData: function() {
-		Log.info("Getting Data");
+		Log.info("MMM-nodejs-pool Getting Data");
 		this.sendSocketNotification("GET_DATA");
 	},
 
