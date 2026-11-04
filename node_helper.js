@@ -30,6 +30,7 @@ module.exports = NodeHelper.create({
                 
                 }).on('error', (err) => {
                   Log.error(`Got error: ${err.message}`);
+                  this.sendSocketNotification("POOL_ERROR", err.message);
                 });
     },
 
@@ -38,9 +39,16 @@ module.exports = NodeHelper.create({
         },
     
     socketNotificationReceived: function(notification, payload) {
-        if (notification === "CONFIG") {
+        // Config is sent with CONFIG and with every GET_DATA, so the helper
+        // never depends on CONFIG having arrived first.
+        if (payload && payload.hostname) {
             this.config = payload;
-        } else if (notification === "GET_DATA") {
+        }
+        if (notification === "GET_DATA") {
+            if (!this.config || !this.config.hostname) {
+                Log.error("MMM-nodejs-pool: no hostname configured yet");
+                return;
+            }
             this.getData();
         }
     }

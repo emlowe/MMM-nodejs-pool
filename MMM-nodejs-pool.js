@@ -32,13 +32,18 @@ Module.register("MMM-nodejs-pool",{
 
 	getData: function() {
 		Log.info("MMM-nodejs-pool Getting Data");
-		this.sendSocketNotification("GET_DATA");
+		this.sendSocketNotification("GET_DATA", this.config);
 	},
 
 	socketNotificationReceived: function(notification, payload) {
 		if (notification === "POOL_DATA") {
-			this.poolData = JSON.parse(payload);
-			this.loaded = true;
+			try {
+				this.poolData = JSON.parse(payload);
+				this.loaded = true;
+			} catch (e) {
+				Log.error("MMM-nodejs-pool: could not parse pool data: " + e.message);
+				this.loaded = false;
+			}
 			this.updateDom();
 		} else if (notification === "POOL_ERROR") {
 			this.loaded = false;
