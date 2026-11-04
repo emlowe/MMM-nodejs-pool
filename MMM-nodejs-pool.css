@@ -1,6 +1,102 @@
-.MMM-nodejs-pool .pumpInfo{ padding-top: 10px;}
+.pool-panel {
+  --pool-accent: #4fa8e8;
+  color: #fff;
+  font-weight: 300;
+  text-align: left;
+  width: 400px;
+}
 
-.MMM-nodejs-pool .heatInfo { padding-top: 10px;}
+.pool-panel.pool-spa {
+  --pool-accent: #f0997b;
+}
 
-.MMM-nodejs-pool .airsolTemp { padding-top: 5px;}
+.pool-dim {
+  color: #a3a9b0;
+}
 
+.pool-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 26px;
+  line-height: 1.2;
+}
+
+.pool-running {
+  color: #5dcaa5;
+  font-size: 22px;
+}
+
+.pool-temp {
+  font-size: 84px;
+  line-height: 1.1;
+  color: var(--pool-accent);
+}
+
+.pool-off .pool-temp {
+  color: #a3a9b0;
+  font-size: 56px;
+}
+
+.pool-track {
+  position: relative;
+  height: 8px;
+  margin-top: 6px;
+  background: #3a4047;
+  border-radius: 4px;
+}
+
+.pool-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--pool-accent);
+  border-radius: 4px;
+}
+
+.pool-marker {
+  position: absolute;
+  top: -5px;
+  width: 3px;
+  height: 18px;
+  margin-left: -1px;
+  background: #ef9f27;
+}
+
+.pool-heat-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.pool-setpoint,
+.pool-heating {
+  color: #ef9f27;
+}
+
+.pool-cleaner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 7px 12px;
+  border: 1px solid #5dcaa5;
+  border-radius: 8px;
+  color: #5dcaa5;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.pool-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #3a4047;
+  font-size: 26px;
+  line-height: 1.2;
+}

@@ -13,7 +13,9 @@ Module.register("MMM-nodejs-pool",{
 	defaults: {
 		hostname: "",
 		initialLoadDelay: 0,
-		updateInterval:  10 * 60 * 1000, // every 10 minutes
+		updateInterval: 2 * 60 * 1000, // every 2 minutes
+		tempMin: 40, // left end of the temperature bar
+		tempMax: 110, // right end of the temperature bar
 	},
 
 	// Define start sequence.
@@ -26,9 +28,9 @@ Module.register("MMM-nodejs-pool",{
 		this.scheduleUpdate(this.config.initialLoadDelay);
 	},
 
-    getStyles: function() {
-        return ['font-awesome.css', "MMM-nodejs-pool.css"];
-    },
+	getStyles: function() {
+		return ["font-awesome.css", "MMM-nodejs-pool.css"];
+	},
 
 	getData: function() {
 		Log.info("MMM-nodejs-pool Getting Data");
@@ -49,95 +51,150 @@ Module.register("MMM-nodejs-pool",{
 			this.loaded = false;
 			this.updateDom();
 		}
-		this.scheduleUpdate()
+		this.scheduleUpdate();
+	},
+
+	// Create an element with a class and optional text.
+	el: function(tag, className, text) {
+		var node = document.createElement(tag);
+		if (className) {
+			node.className = className;
+		}
+		if (text !== undefined) {
+			node.textContent = text;
+		}
+		return node;
+	},
+
+	// Label for a stat, followed by its value: "Air 65°".
+	stat: function(label, value, labelFirst) {
+		var node = this.el("span");
+		var labelNode = this.el("span", "pool-dim", label);
+		var valueNode = document.createTextNode(value);
+		if (labelFirst) {
+			node.appendChild(labelNode);
+			node.appendChild(document.createTextNode(" "));
+			node.appendChild(valueNode);
+		} else {
+			node.appendChild(valueNode);
+			node.appendChild(document.createTextNode(" "));
+			node.appendChild(labelNode);
+		}
+		return node;
+	},
+
+	// Temperature bar with a set point marker, plus the heat status below it.
+	tempBar: function(body) {
+		var fragment = document.createDocumentFragment();
+		var range = this.config.tempMax - this.config.tempMin;
+		var percent = function(value, min) {
+			return Math.max(0, Math.min(100, ((value - min) / range) * 100));
+		};
+
+		var track = this.el("div", "pool-track");
+		var fill = this.el("div", "pool-fill");
+		fill.style.width = (typeof body.temp === "number" ? percent(body.temp, this.config.tempMin) : 0) + "%";
+		track.appendChild(fill);
+
+		var hasSetPoint = typeof body.setPoint === "number";
+		if (hasSetPoint) {
+			var marker = this.el("div", "pool-marker");
+			marker.style.left = percent(body.setPoint, this.config.tempMin) + "%";
+			track.appendChild(marker);
+		}
+		fragment.appendChild(track);
+
+		var heatStatus = body.heatStatus ? body.heatStatus.val : 0;
+		var heatMode = body.heatMode ? body.heatMode.val : 0;
+		var heatText = "Heat off";
+		var heatClass = "pool-dim";
+		if (heatStatus !== 0) {
+			heatText = "Heating";
+			heatClass = "pool-heating";
+		} else if (heatMode !== 0) {
+			heatText = "Heat on, idle";
+		}
+
+		var row = this.el("div", "pool-heat-row");
+		row.appendChild(this.el("span", heatClass, heatText));
+		if (hasSetPoint) {
+			row.appendChild(this.el("span", "pool-setpoint", "Set " + body.setPoint + "°"));
+		}
+		fragment.appendChild(row);
+
+		return fragment;
 	},
 
 	// Override dom generator.
 	getDom: function() {
-
 		var wrapper = document.createElement("div");
 
-		if (!this.loaded) {
-			wrapper.innerHTML = "Getting Data";
+		if (!this.loaded || !this.poolData) {
+			wrapper.textContent = "Getting Data";
 			wrapper.className = "dimmed light small";
-
 			return wrapper;
 		}
 
-		wrapper.className = "MMM-nodejs-pool";
+		var data = this.poolData;
+		var bodies = (data.temps && data.temps.bodies) || [];
+		var findBody = function(type) {
+			return bodies.find(function(body) {
+				return body.type && body.type.name === type;
+			});
+		};
+		var pool = findBody("pool");
+		var spa = findBody("spa");
+		var cleaner = (data.circuits || []).find(function(circuit) {
+			return circuit.name === "Cleaner";
+		});
+		var pump = (data.pumps || [])[0];
 
-		var large = document.createElement("div");
-		large.className = "medium light";
+		// Spa takes priority: on a shared-body system it uses the same pump and heater.
+		var active = spa && spa.isOn ? spa : (pool && pool.isOn ? pool : null);
+		var isSpa = active !== null && active === spa;
 
-		if (this.poolData) {
-			poolStatus = this.poolData.circuits[5].isOn;
-			spaStatus = this.poolData.circuits[0].isOn;
-			var poolString = "";
+		wrapper.className = "pool-panel" + (isSpa ? " pool-spa" : "") + (active ? "" : " pool-off");
 
-			var poolTemp = document.createElement("span");
+		var head = this.el("div", "pool-head");
+		head.appendChild(this.el("span", null, isSpa ? "Spa" : "Pool"));
+		if (active) {
+			var running = this.el("span", "pool-running");
+			running.appendChild(this.el("i", "fa fa-check-circle"));
+			running.appendChild(document.createTextNode(" Running"));
+			head.appendChild(running);
+		}
+		wrapper.appendChild(head);
 
-			if (poolStatus == 1) {
-				poolTemp.className = "bright poolTemp";
-				poolString = "Pool is On: " + this.poolData.temps.bodies[0].temp + "&deg;";
-					
-			} else if (spaStatus == 1) {
-				poolTemp.className = "bright poolTemp";
-				spaString = "Spa is On: " + this.poolData.temps.bodies[1].temp + "&deg;";
-			} else {
-				poolTemp.className = "dimmed poolTemp";
-				poolString = "Pool is Off";
-			}
-
-			poolTemp.innerHTML = poolString;
-			large.appendChild(poolTemp);
-
-			if (poolStatus == 1 || spaStatus == 1) {	
-				// Add in Pump Speed
-				var pumpWatts = this.poolData.pumps[0].rpm;
-				var pumpSpeed = this.poolData.pumps[0].watts;
-	
-				var pumpInfo= document.createElement("div");
-				pumpInfo.className = "bright small pumpInfo";
-				pumpInfo.innerHTML = "Pump: " + pumpWatts + " Watts, " + pumpSpeed + " RPM";
-					
-				large.appendChild(pumpInfo);
-
-/*
-				if (this.tempData) {
-					// Show Pool heater information
-					var heatInfo = document.createElement("div");
-					if (this.tempData.temperature.heaterActive == 0) {
-						heatInfo.className = "dimmed small heatInfo";
-						heatInfo.innerHTML = "Heat is off";
-					} else {
-						heatInfo.className = "bright small heatInfo";
-						heatInfo.innerHTML = "Heat is on";
-					}
-					large.appendChild(heatInfo);
-				}
-*/
-			}
-
-			var airsolTemp = document.createElement("div");
-			airsolTemp.className = "light medium airsolTemp";
-			large.appendChild(airsolTemp);
-
-			var airTemp = document.createElement("span");
-			airTemp.innerHTML = "Air: " + this.poolData.temps.air + "&deg; ";
-			airsolTemp.appendChild(airTemp);
-
-//			var solTemp = document.createElement("span");
-//			solTemp.className = "solTemp";
-//			solTemp.innerHTML = "Solar: " + this.poolData.temperature.solarTemp + "&deg;";
-//			airsolTemp.appendChild(solTemp);
+		if (active) {
+			// A body can report no reading, so fall back to a dash rather than "undefined".
+			var hasTemp = typeof active.temp === "number";
+			wrapper.appendChild(this.el("div", "pool-temp", hasTemp ? active.temp + "°" : "—"));
+			wrapper.appendChild(this.tempBar(active));
+		} else {
+			// The sensor reading goes stale with the pump off, so don't show it.
+			wrapper.appendChild(this.el("div", "pool-temp", "Off"));
 		}
 
-		wrapper.appendChild(large);
+		if (cleaner && cleaner.isOn) {
+			var cleanerRow = this.el("div", "pool-cleaner");
+			cleanerRow.appendChild(this.el("i", "fa fa-robot"));
+			cleanerRow.appendChild(this.el("span", null, "Cleaner running"));
+			wrapper.appendChild(cleanerRow);
+		}
+
+		var stats = this.el("div", "pool-stats");
+		stats.appendChild(this.stat("Air", data.temps.air + "°", true));
+		if (active && pump) {
+			stats.appendChild(this.stat("rpm", String(pump.rpm), false));
+			stats.appendChild(this.stat("W", String(pump.watts), false));
+		}
+		wrapper.appendChild(stats);
+
 		return wrapper;
 	},
 
 	notificationReceived: function(notification, payload, sender) {
-		if (notification === "DOM_OBJECTS_CREATED") {	
+		if (notification === "DOM_OBJECTS_CREATED") {
 			this.updateDom();
 		}
 	},
@@ -149,8 +206,8 @@ Module.register("MMM-nodejs-pool",{
 		}
 
 		var self = this;
-		setTimeout(function() { self.getData(); }, nextLoad);
+		clearTimeout(this.updateTimer);
+		this.updateTimer = setTimeout(function() { self.getData(); }, nextLoad);
 	},
 
 });
-
