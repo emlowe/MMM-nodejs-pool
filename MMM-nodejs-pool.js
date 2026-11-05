@@ -66,6 +66,31 @@ Module.register("MMM-nodejs-pool",{
 		return node;
 	},
 
+	// Pressure cleaner: a debris bag above two wheels.
+	cleanerIcon: function() {
+		var ns = "http://www.w3.org/2000/svg";
+		var icon = document.createElementNS(ns, "svg");
+		icon.setAttribute("class", "pool-cleaner-icon");
+		icon.setAttribute("viewBox", "0 0 24 24");
+		icon.setAttribute("aria-hidden", "true");
+
+		var add = function(tag, className, attributes) {
+			var shape = document.createElementNS(ns, tag);
+			shape.setAttribute("class", className);
+			Object.keys(attributes).forEach(function(name) {
+				shape.setAttribute(name, attributes[name]);
+			});
+			icon.appendChild(shape);
+		};
+
+		add("path", "pool-cleaner-line", { d: "M3.5 2.5H12c2.700 0 4 1.800 4 4.500v2.500h-2V14h-4V9.500H7c-2.200 0-3.500-2-3.500-7z" });
+		[6.2, 17.8].forEach(function(x) {
+			add("circle", "pool-cleaner-line", { cx: x, cy: 17.5, r: 4.6 });
+			add("circle", "pool-cleaner-hub", { cx: x, cy: 17.5, r: 1.2 });
+		});
+		return icon;
+	},
+
 	// Label for a stat, followed by its value: "Air 65°".
 	stat: function(label, value, labelFirst) {
 		var node = this.el("span");
@@ -165,7 +190,7 @@ Module.register("MMM-nodejs-pool",{
 		var status = this.el("div", "pool-status");
 		if (cleaner && cleaner.isOn) {
 			var cleanerLine = this.el("div", "pool-cleaner");
-			cleanerLine.appendChild(this.el("i", "fa fa-robot"));
+			cleanerLine.appendChild(this.cleanerIcon());
 			cleanerLine.appendChild(document.createTextNode(" Cleaner"));
 			status.appendChild(cleanerLine);
 		}
