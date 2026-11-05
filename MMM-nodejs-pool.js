@@ -83,9 +83,8 @@ Module.register("MMM-nodejs-pool",{
 		return node;
 	},
 
-	// Temperature bar with a set point marker, plus the heat status below it.
+	// Temperature bar with a set point marker.
 	tempBar: function(body) {
-		var fragment = document.createDocumentFragment();
 		var range = this.config.tempMax - this.config.tempMin;
 		var percent = function(value, min) {
 			return Math.max(0, Math.min(100, ((value - min) / range) * 100));
@@ -96,14 +95,16 @@ Module.register("MMM-nodejs-pool",{
 		fill.style.width = (typeof body.temp === "number" ? percent(body.temp, this.config.tempMin) : 0) + "%";
 		track.appendChild(fill);
 
-		var hasSetPoint = typeof body.setPoint === "number";
-		if (hasSetPoint) {
+		if (typeof body.setPoint === "number") {
 			var marker = this.el("div", "pool-marker");
 			marker.style.left = percent(body.setPoint, this.config.tempMin) + "%";
 			track.appendChild(marker);
 		}
-		fragment.appendChild(track);
+		return track;
+	},
 
+	// Heat status and set point lines for the stack beside the temperature.
+	addHeatLines: function(status, body) {
 		var heatStatus = body.heatStatus ? body.heatStatus.val : 0;
 		var heatMode = body.heatMode ? body.heatMode.val : 0;
 		var heatText = "Heat off";
@@ -115,14 +116,10 @@ Module.register("MMM-nodejs-pool",{
 			heatText = "Heat on, idle";
 		}
 
-		var row = this.el("div", "pool-heat-row");
-		row.appendChild(this.el("span", heatClass, heatText));
-		if (hasSetPoint) {
-			row.appendChild(this.el("span", "pool-setpoint", "Set " + body.setPoint + "°"));
+		status.appendChild(this.el("div", heatClass, heatText));
+		if (typeof body.setPoint === "number") {
+			status.appendChild(this.el("div", "pool-setpoint", "Set " + body.setPoint + "°"));
 		}
-		fragment.appendChild(row);
-
-		return fragment;
 	},
 
 	// Override dom generator.
@@ -165,21 +162,29 @@ Module.register("MMM-nodejs-pool",{
 		}
 		wrapper.appendChild(head);
 
+		var status = this.el("div", "pool-status");
+		if (cleaner && cleaner.isOn) {
+			var cleanerLine = this.el("div", "pool-cleaner");
+			cleanerLine.appendChild(this.el("i", "fa fa-robot"));
+			cleanerLine.appendChild(document.createTextNode(" Cleaner"));
+			status.appendChild(cleanerLine);
+		}
+
+		var main = this.el("div", "pool-main");
 		if (active) {
 			// A body can report no reading, so fall back to a dash rather than "undefined".
 			var hasTemp = typeof active.temp === "number";
-			wrapper.appendChild(this.el("div", "pool-temp", hasTemp ? active.temp + "°" : "—"));
-			wrapper.appendChild(this.tempBar(active));
+			main.appendChild(this.el("div", "pool-temp", hasTemp ? active.temp + "°" : "—"));
+			this.addHeatLines(status, active);
 		} else {
 			// The sensor reading goes stale with the pump off, so don't show it.
-			wrapper.appendChild(this.el("div", "pool-temp", "Off"));
+			main.appendChild(this.el("div", "pool-temp", "Off"));
 		}
+		main.appendChild(status);
+		wrapper.appendChild(main);
 
-		if (cleaner && cleaner.isOn) {
-			var cleanerRow = this.el("div", "pool-cleaner");
-			cleanerRow.appendChild(this.el("i", "fa fa-robot"));
-			cleanerRow.appendChild(this.el("span", null, "Cleaner running"));
-			wrapper.appendChild(cleanerRow);
+		if (active) {
+			wrapper.appendChild(this.tempBar(active));
 		}
 
 		var stats = this.el("div", "pool-stats");

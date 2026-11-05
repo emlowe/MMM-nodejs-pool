@@ -27,6 +27,19 @@
   font-size: 22px;
 }
 
+.pool-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pool-status {
+  font-size: 22px;
+  line-height: 1.35;
+  text-align: right;
+  white-space: nowrap;
+}
+
 .pool-temp {
   font-size: 84px;
   line-height: 1.1;
@@ -64,31 +77,13 @@
   background: #ef9f27;
 }
 
-.pool-heat-row {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 8px;
-  font-size: 22px;
-  line-height: 1.2;
-}
-
 .pool-setpoint,
 .pool-heating {
   color: #ef9f27;
 }
 
 .pool-cleaner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 12px;
-  padding: 7px 12px;
-  border: 1px solid #5dcaa5;
-  border-radius: 8px;
   color: #5dcaa5;
-  font-size: 24px;
-  font-weight: 400;
-  line-height: 1.2;
 }
 
 .pool-stats {
